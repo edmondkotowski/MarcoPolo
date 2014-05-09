@@ -90,14 +90,19 @@ public class Main extends Activity {
 
         _receiveDataTask.getClientResponse()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<String>() {
-                    @Override
-                    public void call(final String result) {
-                        if (result != null) {
-                            _textValue.append("\n Received data - " + result);
+                .subscribe(
+                    new Action1<String>() {
+                        @Override
+                        public void call(final String result) {
+                            _textValue.append("\nReceived data - " + result);
                         }
-                    }
-                });
+                    },
+                    new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable throwable) {
+                            _textValue.append("\nError receiving data - " + throwable.getMessage());
+                        }
+                    });
     }
 
     View.OnClickListener _connectTouchListener = new View.OnClickListener() {

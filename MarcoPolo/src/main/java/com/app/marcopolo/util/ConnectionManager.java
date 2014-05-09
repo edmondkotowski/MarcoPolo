@@ -135,12 +135,19 @@ public class ConnectionManager extends BroadcastReceiver {
                 ClientSocket sendTask = new ClientSocket(info.groupOwnerAddress);
                 sendTask.getServerResponse()
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Action1<String>() {
-                            @Override
-                            public void call(final String result) {
-                                _textValue.append("\nSending data complete " + result);
-                            }
-                        });
+                        .subscribe(
+                            new Action1<String>() {
+                                @Override
+                                public void call(final String result) {
+                                    _textValue.append("\nSending data complete " + result);
+                                }
+                            },
+                            new Action1<Throwable>() {
+                                @Override
+                                public void call(Throwable throwable) {
+                                    _textValue.append("\nError sending data " + throwable.getMessage());
+                                }
+                            });
             }
         });
     }

@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.TextView;
 import rx.Observable;
 import rx.Subscriber;
+import rx.exceptions.OnErrorThrowable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -70,10 +71,9 @@ public class ClientSocket {
 
                             return receivedValue;
                         } catch (FileNotFoundException e) {
-                            //catch logic
-                            return e.getMessage();
+                            throw OnErrorThrowable.from(e);
                         } catch (IOException e) {
-                            return e.getMessage();
+                            throw OnErrorThrowable.from(e);
                         }
                     }
                 })

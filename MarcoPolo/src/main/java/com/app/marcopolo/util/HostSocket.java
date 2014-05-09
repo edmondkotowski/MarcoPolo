@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.TextView;
 import rx.Observable;
 import rx.Subscriber;
+import rx.exceptions.OnErrorThrowable;
 import rx.functions.Action0;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -56,8 +57,7 @@ public class HostSocket {
 
                             return receivedValue;
                         } catch (IOException e) {
-                            e.printStackTrace();
-                            return e.getMessage();
+                            throw OnErrorThrowable.from(e);
                         } finally {
                             try {
                                 socket.close();
@@ -70,8 +70,7 @@ public class HostSocket {
                 .subscribeOn(Schedulers.newThread()); // always execute asynchronously
 
             } catch (IOException e) {
-                e.printStackTrace();
-                return Observable.empty();
+                return Observable.error(e);
         }
     }
 }
