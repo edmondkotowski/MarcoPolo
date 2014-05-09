@@ -16,6 +16,9 @@ import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 
+import rx.Observable;
+import rx.functions.Action1;
+
 import java.util.*;
 
 
@@ -71,7 +74,14 @@ public class Main extends Activity {
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-        _textValue.append("\nonCreate end: " + _textValue.hashCode());
+        // example of a Reactive subscription - subscribers assume asyncß
+        Observable.just(_textValue.hashCode())
+                .subscribe(new Action1<Integer>() {
+                    @Override
+                    public void call(Integer integer) {
+                        _textValue.append("\nonCreate end: " + integer);
+                    }
+                });
     }
 
     @Override
