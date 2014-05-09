@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.p2p.*;
 import android.widget.TextView;
+import rx.Scheduler;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
@@ -132,13 +134,13 @@ public class ConnectionManager extends BroadcastReceiver {
 
                 ClientSocket sendTask = new ClientSocket(info.groupOwnerAddress);
                 sendTask.getServerResponse()
-                        .observeOn(Schedulers.immediate())
+                        .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(new Action1<String>() {
-                    @Override
-                    public void call(final String result) {
-                        _textValue.append("\n Sending data complete" + result);
-                    }
-                });
+                            @Override
+                            public void call(final String result) {
+                                _textValue.append("\nSending data complete " + result);
+                            }
+                        });
             }
         });
     }

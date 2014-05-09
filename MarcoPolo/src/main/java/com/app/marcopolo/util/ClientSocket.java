@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.view.View;
 import android.widget.TextView;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
@@ -28,34 +29,44 @@ public class ClientSocket {
 
     public Observable<String> getServerResponse() {
 
-        Socket socket = new Socket();
-
-        return Observable.just(socket)
-                .subscribeOn(Schedulers.newThread())
+        return Observable
+                .create(new Observable.OnSubscribe<Socket>() {
+                    // a data source that creates a connection to the host
+                    @Override
+                    public void call(Subscriber<? super Socket> subscriber) {
+                        Socket socket = new Socket();
+                        try {
+                            socket.bind(null);
+                            socket.connect((new InetSocketAddress(_wifiP2pDevice.getHostAddress(), 8888)), 500);
+                            subscriber.onNext(socket);
+                        } catch (IOException e) {
+                            subscriber.onError(e);
+                        }
+                    }
+                })
                 .map(new Func1<Socket, String>() {
                     @Override
                     public String call(final Socket socket) {
-
                         try {
-                            socket.bind(null);
-
-                            socket.connect((new InetSocketAddress(_wifiP2pDevice.getHostAddress(), 8888)), 500);
-
                             /**
                              * Create a byte stream from a JPEG file and pipe it to the output stream
                              * of the socket. This data will be retrieved by the server device.
                              */
                             OutputStream outputStream = socket.getOutputStream();
+                            InputStream inputStream = new BufferedInputStream(socket.getInputStream());
 
+                            // communicate with the host first -- send a timestamp
                             final Long nanoNow = System.nanoTime();
-                            PrintWriter printWriter = new PrintWriter(outputStream);
-                            printWriter.println(nanoNow);
+                            PrintWriter printWriter = new PrintWriter(outputStream, true);
+                            printWriter.println(nanoNow.toString());
                             printWriter.flush();
 
-                            InputStream inputStream = socket.getInputStream();
-                            String receivedValue = new Scanner(inputStream, "UTF-8").next();
+                            // wait for the host to echo back the timestamp
+                            String receivedValue = new Scanner(inputStream, "UTF-8").nextLine();
+
+                            // clean up
                             inputStream.close();
-                            printWriter.close();
+                            outputStream.close();
 
                             return receivedValue;
                         } catch (FileNotFoundException e) {
@@ -65,7 +76,7 @@ public class ClientSocket {
                             return e.getMessage();
                         }
                     }
-                });
-
+                })
+                .subscribeOn(Schedulers.newThread()); // always execute asynchronously
     }
 }

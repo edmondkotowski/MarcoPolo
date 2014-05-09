@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: rxjava-core-0.18.4-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/MarcoPolo/libs/rxjava-core-0.18.4-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

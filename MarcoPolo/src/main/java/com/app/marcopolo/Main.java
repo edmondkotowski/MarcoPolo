@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
@@ -72,7 +73,7 @@ public class Main extends Activity {
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         // example of a Reactive subscription - subscribers assume asyncß
-        Observable.just(_textValue.hashCode()).repeat(10)
+        Observable.just(_textValue.hashCode())
                 .subscribe(new Action1<Integer>() {
                     @Override
                     public void call(Integer integer) {
@@ -88,8 +89,7 @@ public class Main extends Activity {
         //new Thread(_receiveDataTask).start();
 
         _receiveDataTask.getClientResponse()
-                .observeOn(Schedulers.immediate())
-                .replay()
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<String>() {
                     @Override
                     public void call(final String result) {
