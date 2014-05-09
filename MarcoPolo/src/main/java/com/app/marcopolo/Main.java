@@ -3,21 +3,18 @@ package com.app.marcopolo;
 import android.content.*;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.os.AsyncTask;
 import android.widget.TextView;
 import com.app.marcopolo.util.ConnectionManager;
-import com.app.marcopolo.util.ReceiveDataAsyncTask;
-import com.app.marcopolo.util.SendDataAsyncTask;
+import com.app.marcopolo.util.HostSocket;
 import com.app.marcopolo.util.SystemUiHider;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
-import android.view.MotionEvent;
 import android.view.View;
 
 import rx.Observable;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 import java.util.*;
 
@@ -33,7 +30,7 @@ public class Main extends Activity {
     private ConnectionManager _connectionManager;
     private IntentFilter _intentFilter;
     private Map<String, WifiP2pDevice> _devicesLookup;
-    private ReceiveDataAsyncTask _receiveDataTask;
+    private HostSocket _receiveDataTask;
 
     // register the broadcast receiver with the intent values to be matched
     @Override
@@ -75,7 +72,7 @@ public class Main extends Activity {
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         // example of a Reactive subscription - subscribers assume asyncß
-        Observable.just(_textValue.hashCode())
+        Observable.just(_textValue.hashCode()).repeat(10)
                 .subscribe(new Action1<Integer>() {
                     @Override
                     public void call(Integer integer) {
@@ -87,8 +84,19 @@ public class Main extends Activity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        _receiveDataTask = new ReceiveDataAsyncTask(this.getApplicationContext(), _textValue);
-        new Thread(_receiveDataTask).start();
+        _receiveDataTask = new HostSocket();
+        //new Thread(_receiveDataTask).start();
+
+        _receiveDataTask.getClientResponse()
+                .observeOn(Schedulers.immediate())
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(final String result) {
+                        if (result != null) {
+                            _textValue.append("\n Received data - " + result);
+                        }
+                    }
+                });
     }
 
     View.OnClickListener _connectTouchListener = new View.OnClickListener() {
