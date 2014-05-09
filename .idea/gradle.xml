@@ -7,8 +7,8 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="H:\Projects\MarcoPolo" />
-            <option value="H:\Projects\MarcoPolo\MarcoPolo" />
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/MarcoPolo" />
           </set>
         </option>
       </GradleProjectSettings>
