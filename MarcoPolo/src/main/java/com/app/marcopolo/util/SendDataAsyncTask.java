@@ -1,7 +1,6 @@
 package com.app.marcopolo.util;
 
 import android.content.Context;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.AsyncTask;
 import android.view.View;
 import android.widget.TextView;
@@ -9,26 +8,27 @@ import android.widget.TextView;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class SendDataAsyncTask extends AsyncTask<String, String, String> {
 
-    private Context context;
-    private final WifiP2pDevice _wifiP2pDevice;
-    private final TextView statusText;
+    private final InetAddress _wifiP2pDevice;
+    private final TextView _statusText;
 
-    public SendDataAsyncTask(Context context, View statusText, WifiP2pDevice wifiP2pDevice) {
+    public SendDataAsyncTask(View statusText, InetAddress deviceAddress) {
         if(statusText == null) {
-            throw new IllegalArgumentException("statusText");
+            throw new IllegalArgumentException("_statusText");
         }
-        if(wifiP2pDevice == null) {
-            throw new IllegalArgumentException("wifiP2pDevice");
+        if(deviceAddress == null) {
+            throw new IllegalArgumentException("deviceAddress");
         }
 
-        this.context = context;
-        _wifiP2pDevice = wifiP2pDevice;
-        this.statusText = (TextView) statusText;
+        _wifiP2pDevice = deviceAddress;
+        _statusText = (TextView) statusText;
+
+
     }
 
     @Override
@@ -36,7 +36,8 @@ public class SendDataAsyncTask extends AsyncTask<String, String, String> {
         try {
             Socket socket = new Socket();
             socket.bind(null);
-            socket.connect((new InetSocketAddress(_wifiP2pDevice.deviceName, 8888)), 500);
+
+            socket.connect((new InetSocketAddress(_wifiP2pDevice.getHostAddress(), 8888)), 500);
 
             /**
              * Create a byte stream from a JPEG file and pipe it to the output stream
@@ -61,7 +62,7 @@ public class SendDataAsyncTask extends AsyncTask<String, String, String> {
     @Override
     protected void onPostExecute(String result) {
         if (result != null) {
-            statusText.append("\n Sending data complete" + result);
+            _statusText.append("\n Sending data complete" + result);
         }
     }
 }

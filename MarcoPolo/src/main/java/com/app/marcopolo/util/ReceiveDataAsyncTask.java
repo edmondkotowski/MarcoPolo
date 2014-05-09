@@ -11,7 +11,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class ReceiveDataAsyncTask extends AsyncTask<String, String, String> {
+public class ReceiveDataAsyncTask implements Runnable {
 
     private Context context;
     private TextView statusText;
@@ -21,7 +21,6 @@ public class ReceiveDataAsyncTask extends AsyncTask<String, String, String> {
         this.statusText = (TextView) statusText;
     }
 
-    @Override
     protected String doInBackground(final String... strings) {
         try {
 
@@ -42,10 +41,14 @@ public class ReceiveDataAsyncTask extends AsyncTask<String, String, String> {
         }
     }
 
-    @Override
     protected void onPostExecute(String result) {
         if (result != null) {
             statusText.append("\n Received data - " + result);
         }
+    }
+
+    @Override
+    public void run() {
+        doInBackground();
     }
 }

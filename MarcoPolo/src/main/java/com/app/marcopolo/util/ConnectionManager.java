@@ -4,10 +4,7 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
-import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.*;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -119,6 +116,21 @@ public class ConnectionManager extends BroadcastReceiver {
 
             @Override
             public void onFailure(int reason) {
+            }
+        });
+    }
+
+    public void SendData() {
+        _wifiP2pManager.requestConnectionInfo(_channel, new WifiP2pManager.ConnectionInfoListener() {
+
+            @Override
+            public void onConnectionInfoAvailable(WifiP2pInfo info) {
+                if(info.groupOwnerAddress == null) {
+                    return;
+                }
+
+                SendDataAsyncTask sendTask = new SendDataAsyncTask(_textValue, info.groupOwnerAddress);
+                sendTask.execute();
             }
         });
     }

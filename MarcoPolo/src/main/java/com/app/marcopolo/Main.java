@@ -77,8 +77,8 @@ public class Main extends Activity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-//        _receiveDataTask = new ReceiveDataAsyncTask(this.getApplicationContext(), _textValue);
-//        _receiveDataTask.execute();
+        _receiveDataTask = new ReceiveDataAsyncTask(this.getApplicationContext(), _textValue);
+        new Thread(_receiveDataTask).start();
     }
 
     View.OnClickListener _connectTouchListener = new View.OnClickListener() {
@@ -92,9 +92,7 @@ public class Main extends Activity {
         @Override
         public void onClick(final View view) {
             if(!_devicesLookup.isEmpty()) {
-                String deviceKey = (String)_devicesLookup.keySet().toArray()[0];
-                SendDataAsyncTask sendDataTask = new SendDataAsyncTask(null, _textValue, _devicesLookup.get(deviceKey));
-                sendDataTask.execute();
+                _connectionManager.SendData();
             }
         }
     };
