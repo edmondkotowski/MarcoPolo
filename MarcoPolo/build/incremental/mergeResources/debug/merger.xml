@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger>
+
+    <dataSet config="main" >
+        <source path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res" >
+            <file
+                name="ic_launcher"
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\drawable-hdpi\ic_launcher.png"
+                qualifiers="hdpi"
+                type="drawable" />
+            <file
+                name="ic_launcher"
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\drawable-mdpi\ic_launcher.png"
+                qualifiers="mdpi"
+                type="drawable" />
+            <file
+                name="ic_launcher"
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\drawable-xhdpi\ic_launcher.png"
+                qualifiers="xhdpi"
+                type="drawable" />
+            <file
+                name="ic_launcher"
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\drawable-xxhdpi\ic_launcher.png"
+                qualifiers="xxhdpi"
+                type="drawable" />
+            <file
+                name="activity_main"
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\layout\activity_main.xml"
+                qualifiers=""
+                type="layout" />
+            <file
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\values\attrs.xml"
+                qualifiers="" >
+                <declare-styleable name="ButtonBarContainerTheme" >
+                    <attr
+                        name="metaButtonBarStyle"
+                        format="reference" />
+                    <attr
+                        name="metaButtonBarButtonStyle"
+                        format="reference" />
+                </declare-styleable>
+            </file>
+            <file
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\values\colors.xml"
+                qualifiers="" >
+                <color name="black_overlay" >#66000000
+                </color>
+            </file>
+            <file
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\values\strings.xml"
+                qualifiers="" >
+                <string name="send_button" >send
+                </string>
+                <string name="app_name" >MarcoPolo
+                </string>
+                <string name="dummy_content" >DUMMY\nCONTENT
+                </string>
+                <string name="dummy_button" >connect
+                </string>
+            </file>
+            <file
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\values\styles.xml"
+                qualifiers="" >
+
+                <style name="ButtonBar" >
+                    <item name="android:paddingLeft">
+2dp
+                    </item>
+                    <item name="android:paddingTop">
+5dp
+                    </item>
+                    <item name="android:paddingRight">
+2dp
+                    </item>
+                    <item name="android:paddingBottom">
+0dp
+                    </item>
+                    <item name="android:background">
+@android:drawable/bottom_bar
+                    </item>
+                </style>
+
+                <style
+                    name="FullscreenTheme"
+                    parent="android:Theme.NoTitleBar" >
+                    <item name="android:windowContentOverlay">
+@null
+                    </item>
+                    <item name="android:windowBackground">
+@null
+                    </item>
+                    <item name="metaButtonBarStyle">
+@style/ButtonBar
+                    </item>
+                    <item name="metaButtonBarButtonStyle">
+@style/ButtonBarButton
+                    </item>
+                </style>
+
+                <style name="ButtonBarButton" />
+
+                <style
+                    name="AppTheme"
+                    parent="android:Theme.Holo.Light.DarkActionBar" >
+
+                    <!-- Customize your theme here. -->
+                </style>
+            </file>
+            <file
+                path="H:\Projects\MarcoPolo\MarcoPolo\src\main\res\values-v11\styles.xml"
+                qualifiers="v11" >
+
+                <style
+                    name="FullscreenTheme"
+                    parent="android:Theme.Holo" >
+                    <item name="android:actionBarStyle">
+@style/FullscreenActionBarStyle
+                    </item>
+                    <item name="android:windowActionBarOverlay">
+true
+                    </item>
+                    <item name="android:windowBackground">
+@null
+                    </item>
+                    <item name="metaButtonBarStyle">
+?android:attr/buttonBarStyle
+                    </item>
+                    <item name="metaButtonBarButtonStyle">
+?android:attr/buttonBarButtonStyle
+                    </item>
+                </style>
+
+                <style
+                    name="FullscreenActionBarStyle"
+                    parent="android:Widget.Holo.ActionBar" >
+                    <item name="android:background">
+@color/black_overlay
+                    </item>
+                </style>
+            </file>
+        </source>
+        <source path="H:\Projects\MarcoPolo\MarcoPolo\build\res\rs\debug" />
+        <source path="H:\Projects\MarcoPolo\MarcoPolo\build\res\generated\debug" />
+    </dataSet>
+    <dataSet config="debug" >
+        <source path="H:\Projects\MarcoPolo\MarcoPolo\src\debug\res" />
+    </dataSet>
+
+</merger>

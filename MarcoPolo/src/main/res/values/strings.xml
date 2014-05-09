@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">MarcoPolo</string>
+    <string name="dummy_button">connect</string>
+    <string name="send_button">send</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
+</resources>
