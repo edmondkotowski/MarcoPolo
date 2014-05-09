@@ -6,7 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.p2p.*;
 import android.widget.TextView;
-import android.widget.Toast;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 import java.util.Collection;
 import java.util.Map;
@@ -129,8 +130,15 @@ public class ConnectionManager extends BroadcastReceiver {
                     return;
                 }
 
-                SendDataAsyncTask sendTask = new SendDataAsyncTask(_textValue, info.groupOwnerAddress);
-                sendTask.execute();
+                ClientSocket sendTask = new ClientSocket(info.groupOwnerAddress);
+                sendTask.getServerResponse()
+                        .observeOn(Schedulers.immediate())
+                        .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(final String result) {
+                        _textValue.append("\n Sending data complete" + result);
+                    }
+                });
             }
         });
     }

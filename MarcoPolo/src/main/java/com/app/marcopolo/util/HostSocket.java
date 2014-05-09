@@ -11,6 +11,8 @@ import rx.schedulers.Schedulers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -39,14 +41,19 @@ public class HostSocket {
                         public String call(final Socket socket) {
                             try {
                                 InputStream inputStream = socket.getInputStream();
+
                                 String receivedValue = new Scanner(inputStream, "UTF-8").next();
 
-                                socket.getOutputStream().write(receivedValue.getBytes());
+                                OutputStream outputStream = socket.getOutputStream();
+                                PrintWriter printWriter = new PrintWriter(outputStream);
+                                printWriter.println(receivedValue);
+                                printWriter.close();
+                                inputStream.close();
 
                                 return receivedValue;
                             } catch (IOException e) {
                                 e.printStackTrace();
-                                return null;
+                                return e.getMessage();
                             }
                         }
                     })

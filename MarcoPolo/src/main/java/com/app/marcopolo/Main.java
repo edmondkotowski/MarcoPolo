@@ -89,6 +89,7 @@ public class Main extends Activity {
 
         _receiveDataTask.getClientResponse()
                 .observeOn(Schedulers.immediate())
+                .replay()
                 .subscribe(new Action1<String>() {
                     @Override
                     public void call(final String result) {
