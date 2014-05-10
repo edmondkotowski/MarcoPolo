@@ -1,28 +1,25 @@
 package com.app.marcopolo;
 
-import android.content.*;
+import android.app.Activity;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.util.DebugUtils;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import com.app.marcopolo.util.ConnectionManager;
 import com.app.marcopolo.util.HostSocket;
 import com.app.marcopolo.util.SystemUiHider;
-
-import android.app.Activity;
-import android.os.Bundle;
-import android.view.View;
-
-import rx.Observable;
 import rx.android.observables.ViewObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -77,7 +74,7 @@ public class Main extends Activity {
                     // alternate log subscriber
                     @Override
                     public void call(String s) {
-                        Log.d("MainActivity", s + "\n");
+                        Log.d("MarcoPolo", s + "\n");
                     }
                 });
 
@@ -126,19 +123,19 @@ public class Main extends Activity {
         _receiveDataTask = new HostSocket();
 
         _receiveDataTask.getClientResponse()
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    new Action1<String>() {
-                        @Override
-                        public void call(final String result) {
-                            _logSubject.onNext("Received data - " + result);
+                        new Action1<String>() {
+                            @Override
+                            public void call(final String result) {
+                                _logSubject.onNext("Received data - " + result);
+                            }
+                        },
+                        new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                _logSubject.onNext("Error receiving data - " + throwable.getMessage());
+                            }
                         }
-                    },
-                    new Action1<Throwable>() {
-                        @Override
-                        public void call(Throwable throwable) {
-                            _logSubject.onNext("Error receiving data - " + throwable.getMessage());
-                        }
-                    });
+                );
     }
 }

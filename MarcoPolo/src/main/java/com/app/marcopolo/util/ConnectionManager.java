@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.p2p.*;
 import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
 import java.util.Collection;
@@ -130,20 +129,20 @@ public class ConnectionManager extends BroadcastReceiver {
 
                 ClientSocket sendTask = new ClientSocket(info.groupOwnerAddress);
                 sendTask.getServerResponse()
-                        .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                            new Action1<String>() {
-                                @Override
-                                public void call(final String result) {
-                                    _logObserver.onNext("Sending data complete " + result);
+                                new Action1<String>() {
+                                    @Override
+                                    public void call(final String result) {
+                                        _logObserver.onNext("Sending data complete " + result);
+                                    }
+                                },
+                                new Action1<Throwable>() {
+                                    @Override
+                                    public void call(Throwable throwable) {
+                                        _logObserver.onNext("Error sending data " + throwable.getMessage());
+                                    }
                                 }
-                            },
-                            new Action1<Throwable>() {
-                                @Override
-                                public void call(Throwable throwable) {
-                                    _logObserver.onNext("Error sending data " + throwable.getMessage());
-                                }
-                            });
+                        );
             }
         });
     }
