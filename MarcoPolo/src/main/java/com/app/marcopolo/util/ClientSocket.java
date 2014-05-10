@@ -57,19 +57,21 @@ public class ClientSocket {
                             InputStream inputStream = new BufferedInputStream(socket.getInputStream());
 
                             // communicate with the host first -- send a timestamp
-                            final Long nanoNow = System.nanoTime();
+                            final Long nanoStart = System.nanoTime();
                             PrintWriter printWriter = new PrintWriter(outputStream, true);
-                            printWriter.println(nanoNow.toString());
+                            printWriter.println(nanoStart.toString());
                             printWriter.flush();
 
                             // wait for the host to echo back the timestamp
                             String receivedValue = new Scanner(inputStream, "UTF-8").nextLine();
 
+                            final Long nanoEnd = System.nanoTime();
+
                             // clean up
                             inputStream.close();
                             outputStream.close();
 
-                            return receivedValue;
+                            return receivedValue + " - " + (nanoEnd - nanoStart)/1000000 + " RTT (ms)";
                         } catch (FileNotFoundException e) {
                             throw OnErrorThrowable.from(e);
                         } catch (IOException e) {
