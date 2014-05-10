@@ -18,7 +18,11 @@ public class FriendDevice {
         _deviceAddress = deviceAddress;
     }
 
-    public String get_displayName() {
+    public String getDisplayName() {
         return _displayName;
+    }
+
+    public FriendDevice(String displayName, FriendDevice device) {
+        this(displayName, device._deviceAddress);
     }
 }
