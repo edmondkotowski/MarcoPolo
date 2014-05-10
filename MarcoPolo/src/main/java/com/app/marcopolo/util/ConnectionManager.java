@@ -1,15 +1,12 @@
 package com.app.marcopolo.util;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.p2p.*;
-import android.widget.TextView;
-import rx.Scheduler;
+import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 import java.util.Collection;
 import java.util.Map;
@@ -17,22 +14,21 @@ import java.util.Map;
 public class ConnectionManager extends BroadcastReceiver {
     private final WifiP2pManager _wifiP2pManager;
     private final WifiP2pManager.Channel _channel;
-    private final TextView _textValue;
     private final Map<String, WifiP2pDevice> _devicesLookup;
-    private Activity _ownerActivity;
+    private Observer<String> _logObserver;
 
     public ConnectionManager(WifiP2pManager wifiP2pManager,
-                             final Activity ownerActivity,
-                             WifiP2pManager.Channel channel, TextView textValue,
-                             Map<String, WifiP2pDevice> devicesLookup) {
+                             WifiP2pManager.Channel channel,
+                             Map<String, WifiP2pDevice> devicesLookup,
+                             rx.Observer<String> logObserver) {
+
         if(wifiP2pManager == null) {
             throw new IllegalArgumentException("wifiP2pManager");
         }
 
         _wifiP2pManager = wifiP2pManager;
-        _ownerActivity = ownerActivity;
         _channel = channel;
-        _textValue = textValue;
+        _logObserver = logObserver;
         _devicesLookup = devicesLookup;
     }
 
@@ -43,14 +39,14 @@ public class ConnectionManager extends BroadcastReceiver {
         if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
             int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
             if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-                _textValue.append("\nWifi enabled");
-                _textValue.append("\nonReceive begin: " + _textValue.hashCode());
+                _logObserver.onNext("Wifi enabled");
+                _logObserver.onNext("Receive begin");
             } else {
-                _textValue.append("\nWifi not enabled");
+                _logObserver.onNext("Wifi not enabled");
             }
 
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-            _textValue.append("\nPEERS CHANGED ACTION");
+            _logObserver.onNext("PEERS CHANGED ACTION");
             WifiP2pManager.PeerListListener myPeerListListener = new WifiP2pManager.PeerListListener() {
                 @Override
                 public void onPeersAvailable(final WifiP2pDeviceList wifiP2pDeviceList) {
@@ -93,11 +89,11 @@ public class ConnectionManager extends BroadcastReceiver {
     }
 
     public void discoverPeers() {
-        _textValue.append("\nDiscover peers");
+        _logObserver.onNext("Discover peers");
         _wifiP2pManager.discoverPeers(_channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                _textValue.append("\nDiscover peers success");
+                _logObserver.onNext("Discover peers success");
             }
 
             @Override
@@ -108,13 +104,13 @@ public class ConnectionManager extends BroadcastReceiver {
 
     public void connectToPeer(final WifiP2pDevice device) {
         WifiP2pConfig config = new WifiP2pConfig();
-        _textValue.append("\nconnectToPeer " + device.deviceName);
-        _textValue.append("\nconnectToPeer begin: " + _textValue.hashCode());
+        _logObserver.onNext("connectToPeer " + device.deviceName);
+        _logObserver.onNext("connectToPeer begin");
         config.deviceAddress = device.deviceAddress;
         _wifiP2pManager.connect(_channel, config, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                _textValue.append("\nConnected to " + device.deviceName);
+                _logObserver.onNext("Connected to " + device.deviceName);
             }
 
             @Override
@@ -139,13 +135,13 @@ public class ConnectionManager extends BroadcastReceiver {
                             new Action1<String>() {
                                 @Override
                                 public void call(final String result) {
-                                    _textValue.append("\nSending data complete " + result);
+                                    _logObserver.onNext("Sending data complete " + result);
                                 }
                             },
                             new Action1<Throwable>() {
                                 @Override
                                 public void call(Throwable throwable) {
-                                    _textValue.append("\nError sending data " + throwable.getMessage());
+                                    _logObserver.onNext("Error sending data " + throwable.getMessage());
                                 }
                             });
             }

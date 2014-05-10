@@ -3,6 +3,8 @@ package com.app.marcopolo;
 import android.content.*;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.util.DebugUtils;
+import android.util.Log;
 import android.widget.TextView;
 import com.app.marcopolo.util.ConnectionManager;
 import com.app.marcopolo.util.HostSocket;
@@ -18,6 +20,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 import java.util.*;
 
@@ -34,6 +37,7 @@ public class Main extends Activity {
     private IntentFilter _intentFilter;
     private Map<String, WifiP2pDevice> _devicesLookup;
     private HostSocket _receiveDataTask;
+    private final PublishSubject<String> _logSubject = PublishSubject.create();
 
     // register the broadcast receiver with the intent values to be matched
     @Override
@@ -56,8 +60,28 @@ public class Main extends Activity {
         setContentView(R.layout.activity_main);
 
         _textValue = (TextView) findViewById(R.id.textView);
+        _textValue.setText("");
 
-        _textValue.append("\nonCreate begin: " + _textValue.hashCode());
+        _logSubject
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<String>() {
+                    // UI log subscriber
+                    @Override
+                    public void call(String s) {
+                        _textValue.append(s + "\n");
+                    }
+                });
+
+        _logSubject
+                .subscribe(new Action1<String>() {
+                    // alternate log subscriber
+                    @Override
+                    public void call(String s) {
+                        Log.d("MainActivity", s + "\n");
+                    }
+                });
+
+        _logSubject.onNext("onCreate begin: " + _textValue.hashCode());
 
         _devicesLookup = new HashMap<>();
 
@@ -85,7 +109,7 @@ public class Main extends Activity {
 
         WifiP2pManager manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         WifiP2pManager.Channel channel = manager.initialize(this, getMainLooper(), null);
-        _connectionManager = new ConnectionManager(manager, this, channel, _textValue, _devicesLookup);
+        _connectionManager = new ConnectionManager(manager, channel, _devicesLookup, _logSubject);
 
         _intentFilter = new IntentFilter();
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -93,21 +117,13 @@ public class Main extends Activity {
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-        // example of a Reactive subscription - subscribers assume asyncß
-        Observable.just(_textValue.hashCode())
-                .subscribe(new Action1<Integer>() {
-                    @Override
-                    public void call(Integer integer) {
-                        _textValue.append("\nonCreate end: " + integer);
-                    }
-                });
+        _logSubject.onNext("onCreate end.");
     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         _receiveDataTask = new HostSocket();
-        //new Thread(_receiveDataTask).start();
 
         _receiveDataTask.getClientResponse()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -115,13 +131,13 @@ public class Main extends Activity {
                     new Action1<String>() {
                         @Override
                         public void call(final String result) {
-                            _textValue.append("\nReceived data - " + result);
+                            _logSubject.onNext("Received data - " + result);
                         }
                     },
                     new Action1<Throwable>() {
                         @Override
                         public void call(Throwable throwable) {
-                            _textValue.append("\nError receiving data - " + throwable.getMessage());
+                            _logSubject.onNext("Error receiving data - " + throwable.getMessage());
                         }
                     });
     }
