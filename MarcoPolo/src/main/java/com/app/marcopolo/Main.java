@@ -29,10 +29,8 @@ import java.util.Map;
  * @see SystemUiHider
  */
 public class Main extends Activity {
-    private TextView _textValue;
     private ConnectionManager _connectionManager;
     private IntentFilter _intentFilter;
-    private Map<String, WifiP2pDevice> _devicesLookup;
     private HostSocket _receiveDataTask;
     private final PublishSubject<String> _logSubject = PublishSubject.create();
 
@@ -56,16 +54,19 @@ public class Main extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        _textValue = (TextView) findViewById(R.id.textView);
-        _textValue.setText("");
-
         _logSubject
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<String>() {
                     // UI log subscriber
+                    final TextView textValue = (TextView) findViewById(R.id.textView);
+
+                    {
+                        textValue.setText("");
+                    }
+
                     @Override
                     public void call(String s) {
-                        _textValue.append(s + "\n");
+                        textValue.append(s + "\n");
                     }
                 });
 
@@ -78,9 +79,9 @@ public class Main extends Activity {
                     }
                 });
 
-        _logSubject.onNext("onCreate begin: " + _textValue.hashCode());
+        _logSubject.onNext("onCreate begin. ");
 
-        _devicesLookup = new HashMap<>();
+        final Map<String, WifiP2pDevice> devicesLookup = new HashMap<>();
 
         ViewObservable.clicks(findViewById(R.id.dummy_button), false)
                 .subscribe(new Action1<View>() {
@@ -94,7 +95,7 @@ public class Main extends Activity {
                 .filter(new Func1<View, Boolean>() {
                     @Override
                     public Boolean call(View view) {
-                        return !_devicesLookup.isEmpty();
+                        return !devicesLookup.isEmpty();
                     }
                 })
                 .subscribe(new Action1<View>() {
@@ -106,7 +107,7 @@ public class Main extends Activity {
 
         WifiP2pManager manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         WifiP2pManager.Channel channel = manager.initialize(this, getMainLooper(), null);
-        _connectionManager = new ConnectionManager(manager, channel, _devicesLookup, _logSubject);
+        _connectionManager = new ConnectionManager(manager, channel, devicesLookup, _logSubject);
 
         _intentFilter = new IntentFilter();
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
