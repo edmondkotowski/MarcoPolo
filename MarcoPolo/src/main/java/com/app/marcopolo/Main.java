@@ -6,8 +6,10 @@ import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import com.app.marcopolo.util.ConnectionManager;
 import com.app.marcopolo.util.HostSocket;
@@ -59,14 +61,17 @@ public class Main extends Activity {
                 .subscribe(new Action1<String>() {
                     // UI log subscriber
                     final TextView textValue = (TextView) findViewById(R.id.textView);
+                    final ScrollView scrollView = (ScrollView) findViewById(R.id.scrollView);
 
                     {
+//                        textValue.setMovementMethod(ScrollingMovementMethod.getInstance());
                         textValue.setText("");
                     }
 
                     @Override
                     public void call(String s) {
                         textValue.append(s + "\n");
+                        scrollView.fullScroll(View.FOCUS_DOWN);
                     }
                 });
 
