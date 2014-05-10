@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import com.app.marcopolo.util.ConnectionManager;
@@ -54,6 +55,8 @@ public class Main extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        getActionBar().hide();
+
         setContentView(R.layout.activity_main);
 
         _logSubject
@@ -62,6 +65,7 @@ public class Main extends Activity {
                     // UI log subscriber
                     final TextView textValue = (TextView) findViewById(R.id.textView);
                     final ScrollView scrollView = (ScrollView) findViewById(R.id.scrollView);
+                    final WebView webView = (WebView) findViewById(R.id.webView);
 
                     {
 //                        textValue.setMovementMethod(ScrollingMovementMethod.getInstance());
@@ -72,6 +76,8 @@ public class Main extends Activity {
                     public void call(String s) {
                         textValue.append(s + "\n");
                         scrollView.fullScroll(View.FOCUS_DOWN);
+
+                        webView.loadData("<html><body bgcolor=black><font color=red><i>" + s + "</font></i></body></html>", "text/html", "UTF-8");
                     }
                 });
 
