@@ -13,8 +13,10 @@ import android.os.Bundle;
 import android.view.View;
 
 import rx.Observable;
+import rx.android.observables.ViewObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import java.util.*;
@@ -59,8 +61,27 @@ public class Main extends Activity {
 
         _devicesLookup = new HashMap<>();
 
-        findViewById(R.id.dummy_button).setOnClickListener(_connectTouchListener);
-        findViewById(R.id.send_button).setOnClickListener(_sendTouchListener);
+        ViewObservable.clicks(findViewById(R.id.dummy_button), false)
+                .subscribe(new Action1<View>() {
+                    @Override
+                    public void call(View view) {
+                        _connectionManager.discoverPeers();
+                    }
+                });
+
+        ViewObservable.clicks(findViewById(R.id.send_button), false)
+                .filter(new Func1<View, Boolean>() {
+                    @Override
+                    public Boolean call(View view) {
+                        return !_devicesLookup.isEmpty();
+                    }
+                })
+                .subscribe(new Action1<View>() {
+                    @Override
+                    public void call(View view) {
+                        _connectionManager.SendData();
+                    }
+                });
 
         WifiP2pManager manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         WifiP2pManager.Channel channel = manager.initialize(this, getMainLooper(), null);
@@ -104,20 +125,4 @@ public class Main extends Activity {
                         }
                     });
     }
-
-    View.OnClickListener _connectTouchListener = new View.OnClickListener() {
-        @Override
-        public void onClick(final View view) {
-            _connectionManager.discoverPeers();
-        }
-    };
-
-    View.OnClickListener _sendTouchListener = new View.OnClickListener() {
-        @Override
-        public void onClick(final View view) {
-            if(!_devicesLookup.isEmpty()) {
-                _connectionManager.SendData();
-            }
-        }
-    };
 }
