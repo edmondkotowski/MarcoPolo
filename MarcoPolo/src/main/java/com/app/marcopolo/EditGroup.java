@@ -15,8 +15,12 @@ import com.app.marcopolo.util.ConnectionManager;
 import com.app.marcopolo.util.PeerListGroupLoader;
 import com.app.marcopolo.util.SystemUiHider;
 import rx.android.observables.ViewObservable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
+
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -60,21 +64,33 @@ public class EditGroup extends Activity {
         _friendGroup = (FriendGroup) getIntent().getExtras().getSerializable(getClass().getName());
         _peerListListener.setFriendGroup(_friendGroup);
 
+        final ArrayAdapter<String> listViewAdapter = new ArrayAdapter<>(this, R.layout.group_member, _friendGroup.getFriendNames());
+        _groupMemberList = (ListView) findViewById(R.id.group_members);
+        _groupMemberList.setAdapter(listViewAdapter);
 
         ViewObservable.clicks(findViewById(R.id.add_friends), false)
-                .subscribe(new Action1<View>() {
+                .observeOn(Schedulers.io())
+                .doOnNext(new Action1<View>() {
                     @Override
                     public void call(View view) {
                         _connectionManager.discoverPeers();
                     }
+                })
+                .delay(3, TimeUnit.SECONDS) // delay for 3 seconds after discovering on background thread since no way to react to change in friend group
+                // TODO subscribe to change event instead of delay
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<View>() {
+                    @Override
+                    public void call(View view) {
+                        listViewAdapter.notifyDataSetChanged();
+                    }
                 });
 
-        _groupMemberList = (ListView) findViewById(R.id.group_members);
-        _groupMemberList.setAdapter(new ArrayAdapter<>(this, R.layout.group_member, _friendGroup.getFriendNames()));
+
         _groupMemberList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
-                String friendDisplayName = (String)parent.getSelectedItem();
+                String friendDisplayName = (String)_groupMemberList.getItemAtPosition((int) id);
                 _friendGroup.connectTo(friendDisplayName, _connectionManager);
             }
         });
