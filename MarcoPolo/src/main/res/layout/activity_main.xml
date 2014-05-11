@@ -60,12 +60,12 @@
             android:layout_weight="0"
             android:orientation="horizontal">
 
-            <Button android:id="@+id/dummy_button"
+            <Button android:id="@+id/discover_button"
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/dummy_button" />
+                android:text="@string/discover_button" />
 
             <Button android:id="@+id/send_button"
                     style="?metaButtonBarButtonStyle"

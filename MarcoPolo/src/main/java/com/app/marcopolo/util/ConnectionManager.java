@@ -14,19 +14,25 @@ public class ConnectionManager extends BroadcastReceiver {
     private final WifiP2pManager _wifiP2pManager;
     private final WifiP2pManager.Channel _channel;
     private final Map<String, WifiP2pDevice> _devicesLookup;
+    private final WifiP2pManager.PeerListListener _peerListListener;
     private Observer<String> _logObserver;
 
     public ConnectionManager(WifiP2pManager wifiP2pManager,
                              WifiP2pManager.Channel channel,
                              Map<String, WifiP2pDevice> devicesLookup,
-                             rx.Observer<String> logObserver) {
+                             WifiP2pManager.PeerListListener peerListListener,
+                             Observer<String> logObserver) {
 
         if(wifiP2pManager == null) {
             throw new IllegalArgumentException("wifiP2pManager");
         }
+        if(peerListListener == null) {
+            throw new IllegalArgumentException("peerListListener can not be null");
+        }
 
         _wifiP2pManager = wifiP2pManager;
         _channel = channel;
+        _peerListListener = peerListListener;
         _logObserver = logObserver;
         _devicesLookup = devicesLookup;
     }
@@ -45,40 +51,12 @@ public class ConnectionManager extends BroadcastReceiver {
             }
 
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-            _logObserver.onNext("PEERS CHANGED ACTION");
-            WifiP2pManager.PeerListListener myPeerListListener = new WifiP2pManager.PeerListListener() {
-                @Override
-                public void onPeersAvailable(final WifiP2pDeviceList wifiP2pDeviceList) {
-                    Collection<WifiP2pDevice> collection = wifiP2pDeviceList.getDeviceList();
-
-                    for (WifiP2pDevice wifiP2pDevice : collection) {
-                        if(!_devicesLookup.containsKey(wifiP2pDevice.deviceName)) {
-                            connectToPeer(wifiP2pDevice);
-
-                            _devicesLookup.put(wifiP2pDevice.deviceName, wifiP2pDevice);
-                        }
-                    }
-
-                    if(!collection.isEmpty()) {
-                        _wifiP2pManager.stopPeerDiscovery(_channel, new WifiP2pManager.ActionListener() {
-                            @Override
-                            public void onSuccess() {
-
-                            }
-
-                            @Override
-                            public void onFailure(final int i) {
-
-                            }
-                        });
-                    }
-                }
-            };
+            _logObserver.onNext("PEERS CHANGED ACTION");;
 
             // request available peers from the wifi p2p manager. This is an
             // asynchronous call and the calling activity is notified with a
             // callback on PeerListListener.onPeersAvailable()
-            _wifiP2pManager.requestPeers(_channel, myPeerListListener);
+            _wifiP2pManager.requestPeers(_channel, _peerListListener);
 
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             //_wifiP2pManager.stopPeerDiscovery(_channel, null);

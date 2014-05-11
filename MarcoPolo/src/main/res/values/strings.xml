@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">MarcoPolo</string>
-    <string name="dummy_button">connect</string>
+    <string name="discover_button">connect</string>
     <string name="send_button">send</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
 

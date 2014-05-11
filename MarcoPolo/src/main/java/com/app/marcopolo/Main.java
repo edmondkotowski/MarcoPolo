@@ -6,14 +6,15 @@ import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import com.app.marcopolo.groups.FriendGroup;
 import com.app.marcopolo.util.ConnectionManager;
 import com.app.marcopolo.util.HostSocket;
+import com.app.marcopolo.util.PeerListGroupLoader;
 import com.app.marcopolo.util.SystemUiHider;
 import rx.android.observables.ViewObservable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -36,6 +37,8 @@ public class Main extends Activity {
     private IntentFilter _intentFilter;
     private HostSocket _receiveDataTask;
     private final PublishSubject<String> _logSubject = PublishSubject.create();
+    private final PeerListGroupLoader _peerListListener = new PeerListGroupLoader();
+    private FriendGroup _friendGroup = new FriendGroup("default");
 
     // register the broadcast receiver with the intent values to be matched
     @Override
@@ -94,7 +97,7 @@ public class Main extends Activity {
 
         final Map<String, WifiP2pDevice> devicesLookup = new HashMap<>();
 
-        ViewObservable.clicks(findViewById(R.id.dummy_button), false)
+        ViewObservable.clicks(findViewById(R.id.discover_button), false)
                 .subscribe(new Action1<View>() {
                     @Override
                     public void call(View view) {
@@ -118,7 +121,9 @@ public class Main extends Activity {
 
         WifiP2pManager manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         WifiP2pManager.Channel channel = manager.initialize(this, getMainLooper(), null);
-        _connectionManager = new ConnectionManager(manager, channel, devicesLookup, _logSubject);
+
+        _peerListListener.setFriendGroup(_friendGroup);
+        _connectionManager = new ConnectionManager(manager, channel, devicesLookup, _peerListListener, _logSubject);
 
         _intentFilter = new IntentFilter();
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
