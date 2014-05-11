@@ -2,8 +2,10 @@
 <resources>
 
     <string name="app_name">MarcoPolo</string>
-    <string name="discover_button">discover</string>
+    <string name="new_group_button">new group</string>
     <string name="send_button">send</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_edit_group">Manage Group</string>
+    <string name="default_group_name">Default Group</string>
 
 </resources>

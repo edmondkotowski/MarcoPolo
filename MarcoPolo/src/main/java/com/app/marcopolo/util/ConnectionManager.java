@@ -13,28 +13,31 @@ import java.util.Map;
 public class ConnectionManager extends BroadcastReceiver {
     private final WifiP2pManager _wifiP2pManager;
     private final WifiP2pManager.Channel _channel;
-    private final Map<String, WifiP2pDevice> _devicesLookup;
     private final WifiP2pManager.PeerListListener _peerListListener;
     private Observer<String> _logObserver;
 
     public ConnectionManager(WifiP2pManager wifiP2pManager,
                              WifiP2pManager.Channel channel,
-                             Map<String, WifiP2pDevice> devicesLookup,
                              WifiP2pManager.PeerListListener peerListListener,
                              Observer<String> logObserver) {
 
         if(wifiP2pManager == null) {
             throw new IllegalArgumentException("wifiP2pManager");
         }
+        if(channel == null) {
+            throw new IllegalArgumentException("channel can not be null");
+        }
         if(peerListListener == null) {
             throw new IllegalArgumentException("peerListListener can not be null");
+        }
+        if(logObserver == null) {
+            throw new IllegalArgumentException("logObserver can not be null");
         }
 
         _wifiP2pManager = wifiP2pManager;
         _channel = channel;
         _peerListListener = peerListListener;
         _logObserver = logObserver;
-        _devicesLookup = devicesLookup;
     }
 
     @Override
@@ -79,19 +82,19 @@ public class ConnectionManager extends BroadcastReceiver {
         });
     }
 
-    public void connectToPeer(final WifiP2pDevice device) {
+    public void connectToPeer(final String deviceName, final String deviceAddress) {
         WifiP2pConfig config = new WifiP2pConfig();
-        _logObserver.onNext("connectToPeer " + device.deviceName);
-        _logObserver.onNext("connectToPeer begin");
-        config.deviceAddress = device.deviceAddress;
+        _logObserver.onNext("[info] beginning connectToPeer for " + deviceName);
+        config.deviceAddress = deviceAddress;
         _wifiP2pManager.connect(_channel, config, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                _logObserver.onNext("Connected to " + device.deviceName);
+                _logObserver.onNext("[info] Connected to " + deviceName);
             }
 
             @Override
             public void onFailure(int reason) {
+                _logObserver.onNext("[warning] connectToPeer for " + deviceName + " failed");
             }
         });
     }

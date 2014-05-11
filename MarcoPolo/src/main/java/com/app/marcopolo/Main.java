@@ -1,9 +1,8 @@
 package com.app.marcopolo;
 
 import android.app.Activity;
-import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,16 +13,11 @@ import android.widget.TextView;
 import com.app.marcopolo.groups.FriendGroup;
 import com.app.marcopolo.util.ConnectionManager;
 import com.app.marcopolo.util.HostSocket;
-import com.app.marcopolo.util.PeerListGroupLoader;
 import com.app.marcopolo.util.SystemUiHider;
 import rx.android.observables.ViewObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.subjects.PublishSubject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 
 /**
@@ -33,26 +27,9 @@ import java.util.Map;
  * @see SystemUiHider
  */
 public class Main extends Activity {
-    private ConnectionManager _connectionManager;
-    private IntentFilter _intentFilter;
     private HostSocket _receiveDataTask;
     private final PublishSubject<String> _logSubject = PublishSubject.create();
-    private final PeerListGroupLoader _peerListListener = new PeerListGroupLoader();
-    private FriendGroup _friendGroup = new FriendGroup("default");
 
-    // register the broadcast receiver with the intent values to be matched
-    @Override
-    protected void onResume() {
-        super.onResume();
-        registerReceiver(_connectionManager, _intentFilter);
-    }
-
-    // unregister the broadcast receiver
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(_connectionManager);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,42 +71,23 @@ public class Main extends Activity {
                 });
 
         _logSubject.onNext("onCreate begin. ");
-
-        final Map<String, WifiP2pDevice> devicesLookup = new HashMap<>();
-
-        ViewObservable.clicks(findViewById(R.id.discover_button), false)
+        ViewObservable.clicks(findViewById(R.id.new_group_button), false)
                 .subscribe(new Action1<View>() {
                     @Override
                     public void call(View view) {
-                        _connectionManager.discoverPeers();
+                        Intent groupIntent = new Intent(getApplicationContext(), EditGroup.class);
+
+                        groupIntent.putExtra(EditGroup.class.getName(), new FriendGroup(getResources().getString(R.string.default_group_name)));
+                        startActivity(groupIntent);
                     }
                 });
 
         ViewObservable.clicks(findViewById(R.id.send_button), false)
-                .filter(new Func1<View, Boolean>() {
-                    @Override
-                    public Boolean call(View view) {
-                        return !devicesLookup.isEmpty();
-                    }
-                })
                 .subscribe(new Action1<View>() {
                     @Override
                     public void call(View view) {
-                        _connectionManager.SendData();
                     }
                 });
-
-        WifiP2pManager manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        WifiP2pManager.Channel channel = manager.initialize(this, getMainLooper(), null);
-
-        _peerListListener.setFriendGroup(_friendGroup);
-        _connectionManager = new ConnectionManager(manager, channel, devicesLookup, _peerListListener, _logSubject);
-
-        _intentFilter = new IntentFilter();
-        _intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        _intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        _intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        _intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         _logSubject.onNext("onCreate end.");
     }

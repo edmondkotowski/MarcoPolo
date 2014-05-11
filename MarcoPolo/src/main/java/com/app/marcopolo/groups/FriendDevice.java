@@ -1,9 +1,13 @@
 package com.app.marcopolo.groups;
 
+import com.app.marcopolo.util.ConnectionManager;
+
+import java.io.Serializable;
+
 /**
  * Created by cdockter on 5/10/2014.
  */
-public class FriendDevice {
+public class FriendDevice implements Serializable {
     private final String _displayName;
     private final String _deviceAddress;
 
@@ -17,12 +21,16 @@ public class FriendDevice {
         _displayName = displayName;
         _deviceAddress = deviceAddress;
     }
+    public FriendDevice(String displayName, FriendDevice device) {
+        this(displayName, device._deviceAddress);
+    }
 
     public String getDisplayName() {
         return _displayName;
     }
 
-    public FriendDevice(String displayName, FriendDevice device) {
-        this(displayName, device._deviceAddress);
+
+    public String getDeviceAddress() {
+        return _deviceAddress;
     }
 }

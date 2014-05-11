@@ -1,15 +1,16 @@
 package com.app.marcopolo.groups;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.app.marcopolo.util.ConnectionManager;
+
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * Created by cdockter on 5/10/2014.
  */
-public class FriendGroup {
+public class FriendGroup implements Serializable {
     private final String _displayName;
+    private final List<String> _friendNames = new ArrayList<>();
     private final Map<String, FriendDevice> _members = new HashMap<>();
 
 
@@ -24,6 +25,8 @@ public class FriendGroup {
         if(device == null) {
             throw new IllegalArgumentException("device can not be null");
         }
+        _friendNames.add(device.getDisplayName());
+        Collections.sort(_friendNames);
         _members.put(device.getDisplayName(), device);
         return this;
     }
@@ -49,8 +52,33 @@ public class FriendGroup {
         }
 
         FriendDevice newDevice = new FriendDevice(newDeviceDisplayName,_members.remove(oldDeviceDisplayName));
-        _members.put(newDeviceDisplayName, newDevice);
+        add(newDevice);
 
         return this;
+    }
+
+    public List<String> getFriendNames() {
+        return _friendNames;
+    }
+
+    public String getDisplayName() {
+        return _displayName;
+    }
+
+    public void connectTo(String deviceDisplayName, final ConnectionManager connectionManager) {
+        if(deviceDisplayName == null) {
+            throw new IllegalArgumentException("deviceDisplayName can not be null");
+        }
+        if(!_members.containsKey(deviceDisplayName)) {
+            throw new IllegalArgumentException("group does not include a member " + deviceDisplayName);
+        }
+        if(connectionManager == null) {
+            throw new IllegalArgumentException("connectionManager can not be null");
+        }
+
+        FriendDevice device = _members.get(deviceDisplayName);
+        connectionManager.connectToPeer(device.getDisplayName(), device.getDeviceAddress());
+
+
     }
 }
