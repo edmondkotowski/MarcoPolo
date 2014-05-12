@@ -10,7 +10,6 @@ import java.util.*;
  */
 public class FriendGroup implements Serializable {
     private final String _displayName;
-    private final List<String> _friendNames = new ArrayList<>();
     private final Map<String, FriendDevice> _members = new HashMap<>();
 
 
@@ -25,8 +24,7 @@ public class FriendGroup implements Serializable {
         if(device == null) {
             throw new IllegalArgumentException("device can not be null");
         }
-        _friendNames.add(device.getDisplayName());
-        Collections.sort(_friendNames);
+
         _members.put(device.getDisplayName(), device);
         return this;
     }
@@ -58,7 +56,9 @@ public class FriendGroup implements Serializable {
     }
 
     public List<String> getFriendNames() {
-        return _friendNames;
+        ArrayList<String> friendNamesList = new ArrayList<String>(_members.keySet());
+        Collections.sort(friendNamesList);
+        return friendNamesList;
     }
 
     public String getDisplayName() {
