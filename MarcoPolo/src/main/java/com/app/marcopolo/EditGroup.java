@@ -23,6 +23,7 @@ import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 
@@ -39,7 +40,6 @@ public class EditGroup extends Activity {
     private ConnectionManager _connectionManager;
     private ListView _groupMemberList;
     private final IntentFilter _intentFilter = new IntentFilter();
-    private ContextMenu _menu;
 
     // register the broadcast receiver with the intent values to be matched
     @Override
@@ -55,16 +55,6 @@ public class EditGroup extends Activity {
     }
 
     @Override
-    public void onCreateContextMenu(ContextMenu menu, View v,
-                                    ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.group_member_context, menu);
-        _menu = menu;
-    }
-
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -78,7 +68,8 @@ public class EditGroup extends Activity {
         _friendGroup = (FriendGroup) getIntent().getExtras().getSerializable(getClass().getName());
         _peerListListener.setFriendGroup(_friendGroup);
 
-        final ArrayAdapter<String> listViewAdapter = new ArrayAdapter<>(this, R.layout.group_member, _friendGroup.getFriendNames());
+        final ArrayList<String> friendGroupNames = new ArrayList<>(_friendGroup.getFriendNames());
+        final ArrayAdapter<String> listViewAdapter = new ArrayAdapter<>(this, R.layout.group_member, friendGroupNames);
         _groupMemberList = (ListView) findViewById(R.id.group_members);
         _groupMemberList.setAdapter(listViewAdapter);
 
@@ -96,6 +87,8 @@ public class EditGroup extends Activity {
                 .subscribe(new Action1<View>() {
                     @Override
                     public void call(View view) {
+                        friendGroupNames.clear();
+                        friendGroupNames.addAll(_friendGroup.getFriendNames());
                         listViewAdapter.notifyDataSetChanged();
                     }
                 });
@@ -104,9 +97,11 @@ public class EditGroup extends Activity {
         _groupMemberList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
-                connectToFriend(id);
+                String friendDisplayName = (String)_groupMemberList.getItemAtPosition((int) id);
+                _friendGroup.connectTo(friendDisplayName, _connectionManager);
             }
         });
+
         registerForContextMenu(_groupMemberList);
 
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -114,6 +109,14 @@ public class EditGroup extends Activity {
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
     }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+    }
+
+
 
     private void connectToFriend(final long id) {
         String friendDisplayName = getFriendNameFromViewId((int) id);
@@ -125,9 +128,11 @@ public class EditGroup extends Activity {
     }
 
     @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.group_member_context, menu);
     }
 
     @Override
