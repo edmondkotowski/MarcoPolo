@@ -90,6 +90,7 @@ public class ConnectionManager extends BroadcastReceiver {
             @Override
             public void onSuccess() {
                 _logObserver.onNext("[info] Connected to " + deviceName);
+                SendData();
             }
 
             @Override

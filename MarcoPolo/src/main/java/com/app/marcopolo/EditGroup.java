@@ -20,6 +20,7 @@ import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 
@@ -64,7 +65,8 @@ public class EditGroup extends Activity {
         _friendGroup = (FriendGroup) getIntent().getExtras().getSerializable(getClass().getName());
         _peerListListener.setFriendGroup(_friendGroup);
 
-        final ArrayAdapter<String> listViewAdapter = new ArrayAdapter<>(this, R.layout.group_member, _friendGroup.getFriendNames());
+        final ArrayList<String> friendGroupNames = new ArrayList<>(_friendGroup.getFriendNames());
+        final ArrayAdapter<String> listViewAdapter = new ArrayAdapter<>(this, R.layout.group_member, friendGroupNames);
         _groupMemberList = (ListView) findViewById(R.id.group_members);
         _groupMemberList.setAdapter(listViewAdapter);
 
@@ -82,6 +84,8 @@ public class EditGroup extends Activity {
                 .subscribe(new Action1<View>() {
                     @Override
                     public void call(View view) {
+                        friendGroupNames.clear();
+                        friendGroupNames.addAll(_friendGroup.getFriendNames());
                         listViewAdapter.notifyDataSetChanged();
                     }
                 });
