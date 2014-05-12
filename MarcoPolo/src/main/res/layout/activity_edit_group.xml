@@ -25,7 +25,7 @@
                     android:text="@string/default_group_name"
                     android:id="@+id/textView" android:layout_gravity="center_horizontal"/>
             <ListView
-                    android:layout_width="wrap_content"
+                    android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/group_members"
                     android:layout_weight="1"/>

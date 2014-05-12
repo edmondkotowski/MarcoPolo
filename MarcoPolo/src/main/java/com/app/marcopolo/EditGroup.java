@@ -5,6 +5,9 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -36,6 +39,7 @@ public class EditGroup extends Activity {
     private ConnectionManager _connectionManager;
     private ListView _groupMemberList;
     private final IntentFilter _intentFilter = new IntentFilter();
+    private ContextMenu _menu;
 
     // register the broadcast receiver with the intent values to be matched
     @Override
@@ -49,6 +53,16 @@ public class EditGroup extends Activity {
     protected void onPause() {
         super.onPause();
     }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.group_member_context, menu);
+        _menu = menu;
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,10 +104,10 @@ public class EditGroup extends Activity {
         _groupMemberList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
-                String friendDisplayName = (String)_groupMemberList.getItemAtPosition((int) id);
-                _friendGroup.connectTo(friendDisplayName, _connectionManager);
+                connectToFriend(id);
             }
         });
+        registerForContextMenu(_groupMemberList);
 
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -101,9 +115,37 @@ public class EditGroup extends Activity {
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
     }
 
+    private void connectToFriend(final long id) {
+        String friendDisplayName = getFriendNameFromViewId((int) id);
+        _friendGroup.connectTo(friendDisplayName, _connectionManager);
+    }
+
+    private String getFriendNameFromViewId(final int id) {
+        return (String)_groupMemberList.getItemAtPosition((int) id);
+    }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo contextMenuInfo=(AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+        switch(item.getItemId())
+        {
+            case R.id.connect_item:
+                connectToFriend(contextMenuInfo.id);
+                break;
+            case R.id.rename_item:
+                break;
+            case R.id.remove_item:
+                String friendName = getFriendNameFromViewId((int)contextMenuInfo.id);
+                _friendGroup.remove(friendName);
+                break;
+        }
+
+        return super.onContextItemSelected(item);
     }
 }
