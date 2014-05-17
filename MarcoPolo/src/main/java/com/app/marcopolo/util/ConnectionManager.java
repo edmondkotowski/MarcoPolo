@@ -73,11 +73,12 @@ public class ConnectionManager extends BroadcastReceiver {
         _wifiP2pManager.discoverPeers(_channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                _logObserver.onNext("Discover peers success");
+                _logObserver.onNext("Peer discovery started");
             }
 
             @Override
             public void onFailure(int reasonCode) {
+                _logObserver.onNext("Starting peer discovery failed: " + reasonCode);
             }
         });
     }
@@ -125,6 +126,20 @@ public class ConnectionManager extends BroadcastReceiver {
                                     }
                                 }
                         );
+            }
+        });
+    }
+
+    public void stopDiscovery() {
+        _wifiP2pManager.stopPeerDiscovery(_channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                _logObserver.onNext("Stopping peer discover peers complete");
+            }
+
+            @Override
+            public void onFailure(int reasonCode) {
+                _logObserver.onNext("Stopping peer discovery failed: " + reasonCode);
             }
         });
     }

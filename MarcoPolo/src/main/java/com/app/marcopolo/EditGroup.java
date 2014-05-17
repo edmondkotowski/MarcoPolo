@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import com.app.marcopolo.groups.FriendDeviceFactory;
 import com.app.marcopolo.groups.FriendGroup;
@@ -18,6 +19,7 @@ import com.app.marcopolo.util.ConnectionManager;
 import com.app.marcopolo.util.PeerListGroupLoader;
 import com.app.marcopolo.util.SystemUiHider;
 import rx.android.observables.ViewObservable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
@@ -40,6 +42,8 @@ public class EditGroup extends Activity {
     private ListView _groupMemberList;
     private final IntentFilter _intentFilter = new IntentFilter();
     private ArrayAdapter<String> _listViewAdapter;
+    private Button _stopDiscoveryButton;
+    private Button _startDiscoveryButton;
 
     // register the broadcast receiver with the intent values to be matched
     @Override
@@ -96,15 +100,43 @@ public class EditGroup extends Activity {
         _groupMemberList = (ListView) findViewById(R.id.group_members);
         _groupMemberList.setAdapter(_listViewAdapter);
 
-        ViewObservable.clicks(findViewById(R.id.add_friends), false)
-                //.observeOn(Schedulers.io())
-                .doOnNext(new Action1<View>() {
+        _stopDiscoveryButton = (Button) findViewById(R.id.stop_discovery);
+        _startDiscoveryButton = (Button) findViewById(R.id.start_discovery);
+
+
+        ViewObservable.clicks(_startDiscoveryButton, false)
+                .observeOn(Schedulers.io())
+                .doOnNext(new Action1<Button>() {
                     @Override
-                    public void call(View view) {
+                    public void call(final Button button) {
                         _connectionManager.discoverPeers();
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Action1<Button>() {
+                    @Override
+                    public void call(final Button button) {
+                        _startDiscoveryButton.setVisibility(View.GONE);
+                        _stopDiscoveryButton.setVisibility(View.VISIBLE);
                     }
                 }).subscribe();
 
+        ViewObservable.clicks(_stopDiscoveryButton, false)
+                .observeOn(Schedulers.io())
+                .doOnNext(new Action1<Button>() {
+                    @Override
+                    public void call(final Button button) {
+                        _connectionManager.stopDiscovery();
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Action1<Button>() {
+                    @Override
+                    public void call(final Button button) {
+                        _stopDiscoveryButton.setVisibility(View.GONE);
+                        _startDiscoveryButton.setVisibility(View.VISIBLE);
+                    }
+                }).subscribe();
 
         _groupMemberList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

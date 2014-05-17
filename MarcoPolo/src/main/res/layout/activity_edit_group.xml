@@ -36,10 +36,22 @@
                     android:layout_gravity="center_horizontal|bottom"
                     >
                 <Button
-                        android:layout_width="fill_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Add Friends"
-                        android:id="@+id/add_friends"/>
+                        android:text="discover friends"
+                        android:id="@+id/start_discovery"/>
+                <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="stop discovery"
+                        android:id="@+id/stop_discovery"
+                        android:visibility="gone"/>
+
+                <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="save"
+                        android:id="@+id/save_group"/>
             </LinearLayout>
         </LinearLayout>
     </FrameLayout>
