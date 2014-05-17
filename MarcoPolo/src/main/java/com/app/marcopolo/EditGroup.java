@@ -9,10 +9,7 @@ import android.view.ContextMenu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
+import android.widget.*;
 import com.app.marcopolo.groups.FriendDeviceFactory;
 import com.app.marcopolo.groups.FriendGroup;
 import com.app.marcopolo.util.ConnectionManager;
@@ -24,6 +21,7 @@ import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +42,8 @@ public class EditGroup extends Activity {
     private ArrayAdapter<String> _listViewAdapter;
     private Button _stopDiscoveryButton;
     private Button _startDiscoveryButton;
+    private Button _saveGroupButton;
+    private final FileNameProvider _fileNameProvider = new FileNameProvider();
 
     // register the broadcast receiver with the intent values to be matched
     @Override
@@ -102,6 +102,7 @@ public class EditGroup extends Activity {
 
         _stopDiscoveryButton = (Button) findViewById(R.id.stop_discovery);
         _startDiscoveryButton = (Button) findViewById(R.id.start_discovery);
+        _saveGroupButton = (Button) findViewById(R.id.save_group);
 
 
         ViewObservable.clicks(_startDiscoveryButton, false)
@@ -135,6 +136,40 @@ public class EditGroup extends Activity {
                     public void call(final Button button) {
                         _stopDiscoveryButton.setVisibility(View.GONE);
                         _startDiscoveryButton.setVisibility(View.VISIBLE);
+                    }
+                }).subscribe();
+
+        final EditGroup context = this;
+        ViewObservable.clicks(_saveGroupButton, false)
+                .observeOn(Schedulers.io())
+                .doOnNext(new Action1<Button>() {
+                    @Override
+                    public void call(final Button button) {
+                        _connectionManager.stopDiscovery();
+                        try {
+                            String fileName = _fileNameProvider.getFileName(_friendGroup.getDisplayName());
+                            FileOutputStream file = openFileOutput(fileName, MODE_PRIVATE);
+                            ObjectOutputStream writer = new ObjectOutputStream(file);
+                            writer.writeObject(_friendGroup);
+                        } catch (IOException e) {
+                            // TODO: this is clearly wrong but i'm not sure how to 'do it right'.
+                            _logSubject.onNext("Failed to save group:\n" + e.getMessage());
+                        }
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Action1<Button>() {
+                    @Override
+                    public void call(final Button button) {
+                        _startDiscoveryButton.setVisibility(View.VISIBLE);
+                        _stopDiscoveryButton.setVisibility(View.GONE);
+                        Toast.makeText(getApplicationContext(), "group saved", Toast.LENGTH_LONG).show();
+
+                    }
+                }).doOnError(new Action1<Throwable>() {
+                    @Override
+                    public void call(final Throwable throwable) {
+                        Toast.makeText(context, "saved failed: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }).subscribe();
 
