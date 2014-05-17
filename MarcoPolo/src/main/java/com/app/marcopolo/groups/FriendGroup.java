@@ -11,6 +11,7 @@ import java.util.*;
 public class FriendGroup implements Serializable {
     private final String _displayName;
     private final Map<String, FriendDevice> _members = new HashMap<>();
+    private final Set<String> _uniquenessCollection = new HashSet<>();
 
 
     public FriendGroup(String displayName) {
@@ -20,22 +21,31 @@ public class FriendGroup implements Serializable {
         _displayName = displayName;
     }
 
-    public FriendGroup add(FriendDevice device) {
+    public boolean add(FriendDevice device) {
         if(device == null) {
             throw new IllegalArgumentException("device can not be null");
         }
 
+        if(_uniquenessCollection.contains(device.getDeviceAddress()))
+        {
+            return false;
+        }
         _members.put(device.getDisplayName(), device);
-        return this;
+        return true;
     }
 
-    public FriendGroup remove(String deviceDisplayName) {
+    public boolean remove(String deviceDisplayName) {
         if(deviceDisplayName == null) {
             throw new IllegalArgumentException("deviceDisplayName can not be null");
         }
 
-        _members.remove(deviceDisplayName);
-        return this;
+        if(!_members.containsKey(deviceDisplayName)) {
+            return false;
+        }
+        FriendDevice device = _members.remove(deviceDisplayName);
+
+        _uniquenessCollection.remove(device.getDeviceAddress());
+        return true;
     }
 
     public FriendGroup renameDevice(String oldDeviceDisplayName, String newDeviceDisplayName) {

@@ -18,13 +18,12 @@ import com.app.marcopolo.util.ConnectionManager;
 import com.app.marcopolo.util.PeerListGroupLoader;
 import com.app.marcopolo.util.SystemUiHider;
 import rx.android.observables.ViewObservable;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 
 /**
@@ -40,6 +39,7 @@ public class EditGroup extends Activity {
     private ConnectionManager _connectionManager;
     private ListView _groupMemberList;
     private final IntentFilter _intentFilter = new IntentFilter();
+    private ArrayAdapter<String> _listViewAdapter;
 
     // register the broadcast receiver with the intent values to be matched
     @Override
@@ -52,6 +52,7 @@ public class EditGroup extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        unregisterReceiver(_connectionManager);
     }
 
     @Override
@@ -59,39 +60,50 @@ public class EditGroup extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_edit_group);
+        _listViewAdapter =new ArrayAdapter<>(this, R.layout.group_member, new ArrayList<String>());
 
         WifiP2pManager manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         WifiP2pManager.Channel channel = manager.initialize(this, getMainLooper(), null);
-        _peerListListener  = new PeerListGroupLoader(new FriendDeviceFactory());
+        final Action1<String> updateCallback = new Action1<String>() {
+            @Override
+            public void call(final String result) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        _listViewAdapter.add(result);
+                    }
+                });
+            }
+        };
+        final Action1<List<String>> sourceChangedCallback = new Action1<List<String>>() {
+            @Override
+            public void call(final List<String> result) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        _listViewAdapter.clear();
+                        _listViewAdapter.addAll(result);
+                    }
+                });
+            }
+        };
+        _peerListListener  = new PeerListGroupLoader(new FriendDeviceFactory(), updateCallback, sourceChangedCallback);
         _connectionManager = new ConnectionManager(manager, channel, _peerListListener, _logSubject);
 
         _friendGroup = (FriendGroup) getIntent().getExtras().getSerializable(getClass().getName());
         _peerListListener.setFriendGroup(_friendGroup);
 
-        final ArrayList<String> friendGroupNames = new ArrayList<>(_friendGroup.getFriendNames());
-        final ArrayAdapter<String> listViewAdapter = new ArrayAdapter<>(this, R.layout.group_member, friendGroupNames);
         _groupMemberList = (ListView) findViewById(R.id.group_members);
-        _groupMemberList.setAdapter(listViewAdapter);
+        _groupMemberList.setAdapter(_listViewAdapter);
 
         ViewObservable.clicks(findViewById(R.id.add_friends), false)
-                .observeOn(Schedulers.io())
+                //.observeOn(Schedulers.io())
                 .doOnNext(new Action1<View>() {
                     @Override
                     public void call(View view) {
                         _connectionManager.discoverPeers();
                     }
-                })
-                .delay(3, TimeUnit.SECONDS) // delay for 3 seconds after discovering on background thread since no way to react to change in friend group
-                // TODO subscribe to change event instead of delay
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<View>() {
-                    @Override
-                    public void call(View view) {
-                        friendGroupNames.clear();
-                        friendGroupNames.addAll(_friendGroup.getFriendNames());
-                        listViewAdapter.notifyDataSetChanged();
-                    }
-                });
+                }).subscribe();
 
 
         _groupMemberList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -108,15 +120,9 @@ public class EditGroup extends Activity {
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         _intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+
+        registerReceiver(_connectionManager, _intentFilter);
     }
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-
-    }
-
-
 
     private void connectToFriend(final long id) {
         String friendDisplayName = getFriendNameFromViewId((int) id);
@@ -138,6 +144,7 @@ public class EditGroup extends Activity {
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         AdapterView.AdapterContextMenuInfo contextMenuInfo=(AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+        String friendName = getFriendNameFromViewId((int)contextMenuInfo.id);
         switch(item.getItemId())
         {
             case R.id.connect_item:
@@ -146,11 +153,11 @@ public class EditGroup extends Activity {
             case R.id.rename_item:
                 break;
             case R.id.remove_item:
-                String friendName = getFriendNameFromViewId((int)contextMenuInfo.id);
                 _friendGroup.remove(friendName);
+                _listViewAdapter.remove(friendName);
+                _listViewAdapter.sort(String.CASE_INSENSITIVE_ORDER);
                 break;
         }
-
         return super.onContextItemSelected(item);
     }
 }
