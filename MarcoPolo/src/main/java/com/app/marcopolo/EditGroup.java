@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.*;
 import com.app.marcopolo.groups.FriendDeviceFactory;
 import com.app.marcopolo.groups.FriendGroup;
+import com.app.marcopolo.groups.GroupStore;
 import com.app.marcopolo.util.ConnectionManager;
 import com.app.marcopolo.util.PeerListGroupLoader;
 import com.app.marcopolo.util.SystemUiHider;
@@ -43,7 +44,11 @@ public class EditGroup extends Activity {
     private Button _stopDiscoveryButton;
     private Button _startDiscoveryButton;
     private Button _saveGroupButton;
-    private final FileNameProvider _fileNameProvider = new FileNameProvider();
+    private final GroupStore _groupStore;
+
+    public EditGroup() {
+        _groupStore = new GroupStore(this, new FileNameProvider());
+    }
 
     // register the broadcast receiver with the intent values to be matched
     @Override
@@ -147,10 +152,7 @@ public class EditGroup extends Activity {
                     public void call(final Button button) {
                         _connectionManager.stopDiscovery();
                         try {
-                            String fileName = _fileNameProvider.getFileName(_friendGroup.getDisplayName());
-                            FileOutputStream file = openFileOutput(fileName, MODE_PRIVATE);
-                            ObjectOutputStream writer = new ObjectOutputStream(file);
-                            writer.writeObject(_friendGroup);
+                            _groupStore.put(_friendGroup);
                         } catch (IOException e) {
                             // TODO: this is clearly wrong but i'm not sure how to 'do it right'.
                             _logSubject.onNext("Failed to save group:\n" + e.getMessage());
@@ -176,7 +178,7 @@ public class EditGroup extends Activity {
         _groupMemberList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
-                String friendDisplayName = (String)_groupMemberList.getItemAtPosition((int) id);
+                String friendDisplayName = (String)_groupMemberList.getItemAtPosition(position);
                 _friendGroup.connectTo(friendDisplayName, _connectionManager);
             }
         });
@@ -191,13 +193,13 @@ public class EditGroup extends Activity {
         registerReceiver(_connectionManager, _intentFilter);
     }
 
-    private void connectToFriend(final long id) {
-        String friendDisplayName = getFriendNameFromViewId((int) id);
+    private void connectToFriend(final int position) {
+        String friendDisplayName = getFriendNameFromViewId(position);
         _friendGroup.connectTo(friendDisplayName, _connectionManager);
     }
 
-    private String getFriendNameFromViewId(final int id) {
-        return (String)_groupMemberList.getItemAtPosition((int) id);
+    private String getFriendNameFromViewId(final int position) {
+        return (String)_groupMemberList.getItemAtPosition(position);
     }
 
     @Override
@@ -211,11 +213,11 @@ public class EditGroup extends Activity {
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         AdapterView.AdapterContextMenuInfo contextMenuInfo=(AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
-        String friendName = getFriendNameFromViewId((int)contextMenuInfo.id);
+        String friendName = getFriendNameFromViewId(contextMenuInfo.position);
         switch(item.getItemId())
         {
             case R.id.connect_item:
-                connectToFriend(contextMenuInfo.id);
+                connectToFriend(contextMenuInfo.position);
                 break;
             case R.id.rename_item:
                 break;

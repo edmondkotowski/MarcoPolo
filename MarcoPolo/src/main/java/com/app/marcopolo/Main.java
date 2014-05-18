@@ -2,22 +2,22 @@ package com.app.marcopolo;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
-import android.widget.ScrollView;
-import android.widget.TextView;
+import android.widget.*;
 import com.app.marcopolo.groups.FriendGroup;
-import com.app.marcopolo.util.ConnectionManager;
+import com.app.marcopolo.groups.GroupStore;
 import com.app.marcopolo.util.HostSocket;
 import com.app.marcopolo.util.SystemUiHider;
 import rx.android.observables.ViewObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.subjects.PublishSubject;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 
 /**
@@ -29,6 +29,13 @@ import rx.subjects.PublishSubject;
 public class Main extends Activity {
     private HostSocket _receiveDataTask;
     private final PublishSubject<String> _logSubject = PublishSubject.create();
+    private final GroupStore _groupStore;
+    private ListView _groupList;
+    private ArrayAdapter<String> _listViewAdapter;
+
+    public Main() {
+        _groupStore = new GroupStore(this, new FileNameProvider());
+    }
 
 
     @Override
@@ -75,10 +82,7 @@ public class Main extends Activity {
                 .subscribe(new Action1<View>() {
                     @Override
                     public void call(View view) {
-                        Intent groupIntent = new Intent(getApplicationContext(), EditGroup.class);
-
-                        groupIntent.putExtra(EditGroup.class.getName(), new FriendGroup(getResources().getString(R.string.default_group_name)));
-                        startActivity(groupIntent);
+                        openGroup(new FriendGroup(getResources().getString(R.string.default_group_name)));
                     }
                 });
 
@@ -90,6 +94,35 @@ public class Main extends Activity {
                 });
 
         _logSubject.onNext("onCreate end.");
+
+        _groupList = (ListView) findViewById(R.id.group_list);
+
+        _listViewAdapter = new ArrayAdapter<>(this, R.layout.group_member, new ArrayList<String>());
+        _groupList.setAdapter(_listViewAdapter);
+        _groupList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+                String groupName = (String)_groupList.getItemAtPosition(position);
+                try {
+                    FriendGroup group = _groupStore.getGroup(groupName);
+                    openGroup(group);
+                } catch (final Exception e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "open group failed:\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void openGroup(FriendGroup group) {
+        Intent groupIntent = new Intent(getApplicationContext(), EditGroup.class);
+
+        groupIntent.putExtra(EditGroup.class.getName(), group);
+        startActivity(groupIntent);
     }
 
     @Override
@@ -112,5 +145,15 @@ public class Main extends Activity {
                             }
                         }
                 );
+
+        _listViewAdapter.addAll(_groupStore.getGroupNames());
+    }
+
+    // register the broadcast receiver with the intent values to be matched
+    @Override
+    protected void onResume() {
+        super.onResume();
+        _listViewAdapter.clear();
+        _listViewAdapter.addAll(_groupStore.getGroupNames());
     }
 }
