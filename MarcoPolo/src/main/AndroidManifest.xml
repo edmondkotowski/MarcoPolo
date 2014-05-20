@@ -36,6 +36,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.app.marcopolo.Main" />
         </activity>
+        <activity
+            android:name="com.app.marcopolo.edit_member_name"
+            android:label="@string/title_activity_edit_member_name"
+            android:parentActivityName="com.app.marcopolo.EditGroup" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.app.marcopolo.EditGroup" />
+        </activity>
     </application>
 
 </manifest>

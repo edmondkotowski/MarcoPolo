@@ -78,7 +78,7 @@ public class FriendGroup implements Serializable {
         }
 
         FriendDevice newDevice = new FriendDevice(newDeviceDisplayName,_members.remove(oldDeviceDisplayName));
-        add(newDevice);
+        _members.put(newDevice.getDisplayName(), newDevice);
 
         return this;
     }

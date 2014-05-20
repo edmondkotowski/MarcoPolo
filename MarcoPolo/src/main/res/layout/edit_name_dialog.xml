@@ -8,7 +8,7 @@
             android:orientation="vertical">
 
         <EditText
-                android:id="@+id/group_name_edit_box"
+                android:id="@+id/name_edit_box"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 />

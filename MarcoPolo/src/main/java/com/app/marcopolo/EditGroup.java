@@ -20,6 +20,7 @@ import com.app.marcopolo.util.SystemUiHider;
 import rx.android.observables.ViewObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Action2;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
@@ -119,35 +120,13 @@ public class EditGroup extends Activity {
         _title.setText(_friendGroup.getDisplayName());
         ViewObservable.clicks(_title, false)
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(new Action1<TextView>() {
+                .doOnNext(getEditNameAction("new group name", new Action2<Button, String>() {
                     @Override
-                    public void call(final TextView textView) {
-                        final Dialog dialog = new Dialog(_context);
-                        dialog.setContentView(R.layout.edit_group_name);
-                        dialog.setTitle("new group name");
-                        final Button confirmButton = (Button) dialog.findViewById(R.id.confirm_group_name);
-                        ViewObservable.clicks(confirmButton, false)
-                                .doOnNext(new Action1<Button>() {
-                                    @Override
-                                    public void call(final Button button) {
-                                        final EditText groupNameEditBox = (EditText) dialog.findViewById(R.id.group_name_edit_box);
-                                        String groupName = groupNameEditBox.getText().toString();
-                                        _friendGroup = new FriendGroup(groupName, _friendGroup);
-                                        _title.setText(_friendGroup.getDisplayName());
-                                        dialog.dismiss();
-                                    }
-                                }).subscribe();
-                        final Button cancelButton = (Button) dialog.findViewById(R.id.cancel);
-                        ViewObservable.clicks(cancelButton, false)
-                                .doOnNext(new Action1<Button>() {
-                                    @Override
-                                    public void call(final Button button) {
-                                        dialog.dismiss();
-                                    }
-                                }).subscribe();
-                        dialog.show();
+                    public void call(final Button button, final String name) {
+                        _friendGroup = new FriendGroup(name, _friendGroup);
+                        _title.setText(_friendGroup.getDisplayName());
                     }
-                }).subscribe();
+                })).subscribe();
 
         ViewObservable.clicks(_startDiscoveryButton, false)
                 .observeOn(Schedulers.io())
@@ -232,6 +211,44 @@ public class EditGroup extends Activity {
         registerReceiver(_connectionManager, _intentFilter);
     }
 
+    private Action1<View> getEditNameAction(final String dialogTitle, final Action2<Button, String> onConfirm) {
+        if(dialogTitle == null) {
+            throw new IllegalArgumentException("dialogTitle can not be null");
+        }
+        if(onConfirm == null) {
+            throw new IllegalArgumentException("onConfirm can not be null");
+        }
+
+        return new Action1<View>() {
+            @Override
+            public void call(final View view) {
+                final Dialog dialog = new Dialog(_context);
+                dialog.setContentView(R.layout.edit_name_dialog);
+                dialog.setTitle(dialogTitle);
+                final Button confirmButton = (Button) dialog.findViewById(R.id.confirm_group_name);
+                ViewObservable.clicks(confirmButton, false)
+                        .doOnNext(new Action1<Button>() {
+                            @Override
+                            public void call(final Button button) {
+                                final EditText nameEditBox = (EditText) dialog.findViewById(R.id.name_edit_box);
+                                String name = nameEditBox.getText().toString();
+                                onConfirm.call(button, name);
+                                dialog.dismiss();
+                            }
+                        }).subscribe();
+                final Button cancelButton = (Button) dialog.findViewById(R.id.cancel);
+                ViewObservable.clicks(cancelButton, false)
+                        .doOnNext(new Action1<Button>() {
+                            @Override
+                            public void call(final Button button) {
+                                dialog.dismiss();
+                            }
+                        }).subscribe();
+                dialog.show();
+            }
+        };
+    }
+
     private void connectToFriend(final int position) {
         String friendDisplayName = getFriendNameFromViewId(position);
         _friendGroup.connectTo(friendDisplayName, _connectionManager);
@@ -250,15 +267,22 @@ public class EditGroup extends Activity {
     }
 
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
+    public boolean onContextItemSelected(final MenuItem item) {
         AdapterView.AdapterContextMenuInfo contextMenuInfo=(AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
-        String friendName = getFriendNameFromViewId(contextMenuInfo.position);
+        final String friendName = getFriendNameFromViewId(contextMenuInfo.position);
         switch(item.getItemId())
         {
             case R.id.connect_item:
                 connectToFriend(contextMenuInfo.position);
                 break;
             case R.id.rename_item:
+                getEditNameAction("rename member", new Action2<Button, String>() {
+                    @Override
+                    public void call(final Button button, final String s) {
+                        _friendGroup.renameDevice(friendName, s);
+                        _peerListListener.setFriendGroup(_friendGroup); // hack to make the list view reload in sorted order :S
+                    }
+                }).call(item.getActionView());
                 break;
             case R.id.remove_item:
                 _friendGroup.remove(friendName);

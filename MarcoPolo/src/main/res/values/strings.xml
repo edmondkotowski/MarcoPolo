@@ -7,5 +7,8 @@
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_edit_group">Manage Group</string>
     <string name="default_group_name">Default Group</string>
+    <string name="title_activity_edit_member_name">edit name</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 
 </resources>
