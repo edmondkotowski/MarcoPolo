@@ -10,15 +10,32 @@ import java.util.*;
  */
 public class FriendGroup implements Serializable {
     private final String _displayName;
-    private final Map<String, FriendDevice> _members = new HashMap<>();
-    private final Set<String> _uniquenessCollection = new HashSet<>();
+    private final Map<String, FriendDevice> _members;
+    private final Set<String> _uniquenessCollection;
 
 
-    public FriendGroup(String displayName) {
+    private FriendGroup(final String displayName, final Map<String, FriendDevice> members, final Set<String> uniquenessCollection) {
         if(displayName == null) {
             throw new IllegalArgumentException("displayName can not be null");
         }
+        if(members == null) {
+            throw new IllegalArgumentException("members can not be null");
+        }
+        if(uniquenessCollection == null) {
+            throw new IllegalArgumentException("uniquenessCollection can not be null");
+        }
+
         _displayName = displayName;
+        _members = members;
+        _uniquenessCollection = uniquenessCollection;
+    }
+
+    public FriendGroup(final String displayName, final FriendGroup other) {
+        this(displayName, other._members, other._uniquenessCollection);
+    }
+
+    public FriendGroup(final String displayName) {
+        this(displayName, new HashMap<String, FriendDevice>(), new HashSet<String>());
     }
 
     public boolean add(FriendDevice device) {
@@ -31,6 +48,7 @@ public class FriendGroup implements Serializable {
             return false;
         }
         _members.put(device.getDisplayName(), device);
+        _uniquenessCollection.add(device.getDeviceAddress());
         return true;
     }
 

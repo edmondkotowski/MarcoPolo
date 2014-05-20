@@ -1,6 +1,7 @@
 package com.app.marcopolo;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -45,9 +46,12 @@ public class EditGroup extends Activity {
     private Button _startDiscoveryButton;
     private Button _saveGroupButton;
     private final GroupStore _groupStore;
+    private TextView _title;
+    private final Context _context;
 
     public EditGroup() {
-        _groupStore = new GroupStore(this, new FileNameProvider());
+        _context = this;
+        _groupStore = new GroupStore(_context, new FileNameProvider());
     }
 
     // register the broadcast receiver with the intent values to be matched
@@ -63,6 +67,8 @@ public class EditGroup extends Activity {
         super.onPause();
         unregisterReceiver(_connectionManager);
     }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +114,40 @@ public class EditGroup extends Activity {
         _stopDiscoveryButton = (Button) findViewById(R.id.stop_discovery);
         _startDiscoveryButton = (Button) findViewById(R.id.start_discovery);
         _saveGroupButton = (Button) findViewById(R.id.save_group);
+        _title = (TextView) findViewById(R.id.textView);
 
+        _title.setText(_friendGroup.getDisplayName());
+        ViewObservable.clicks(_title, false)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Action1<TextView>() {
+                    @Override
+                    public void call(final TextView textView) {
+                        final Dialog dialog = new Dialog(_context);
+                        dialog.setContentView(R.layout.edit_group_name);
+                        dialog.setTitle("new group name");
+                        final Button confirmButton = (Button) dialog.findViewById(R.id.confirm_group_name);
+                        ViewObservable.clicks(confirmButton, false)
+                                .doOnNext(new Action1<Button>() {
+                                    @Override
+                                    public void call(final Button button) {
+                                        final EditText groupNameEditBox = (EditText) dialog.findViewById(R.id.group_name_edit_box);
+                                        String groupName = groupNameEditBox.getText().toString();
+                                        _friendGroup = new FriendGroup(groupName, _friendGroup);
+                                        _title.setText(_friendGroup.getDisplayName());
+                                        dialog.dismiss();
+                                    }
+                                }).subscribe();
+                        final Button cancelButton = (Button) dialog.findViewById(R.id.cancel);
+                        ViewObservable.clicks(cancelButton, false)
+                                .doOnNext(new Action1<Button>() {
+                                    @Override
+                                    public void call(final Button button) {
+                                        dialog.dismiss();
+                                    }
+                                }).subscribe();
+                        dialog.show();
+                    }
+                }).subscribe();
 
         ViewObservable.clicks(_startDiscoveryButton, false)
                 .observeOn(Schedulers.io())

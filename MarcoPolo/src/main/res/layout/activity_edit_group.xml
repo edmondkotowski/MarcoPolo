@@ -23,7 +23,8 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceLarge"
                     android:text="@string/default_group_name"
-                    android:id="@+id/textView" android:layout_gravity="center_horizontal"/>
+                    android:id="@+id/textView"
+                    android:layout_gravity="center_horizontal"/>
             <ListView
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
